@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-env
+  namespace: lesson
+spec:
+  containers:
+    - name: app
+      image: busybox
+      command: ["sh", "-c", "env && sleep 3600"]
+      env:
+        # одиночная переменная из ConfigMap
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_LEVEL
+      envFrom:
+        # загрузить ВСЕ ключи ConfigMap как переменные
+        - configMapRef:
+            name: app-config
+  restartPolicy: Never
