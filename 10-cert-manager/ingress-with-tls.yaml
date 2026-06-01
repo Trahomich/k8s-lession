@@ -1,0 +1,42 @@
+# Ingress с автоматическим TLS через cert-manager
+#
+# Что происходит при применении:
+# 1. cert-manager видит аннотацию cert-manager.io/cluster-issuer
+# 2. Создаёт ресурс Certificate
+# 3. Проходит ACME HTTP-01 challenge
+# 4. Сохраняет сертификат в secret my-app-tls
+# 5. Ingress начинает принимать HTTPS
+#
+# Требования:
+# - cert-manager установлен в кластере
+# - ClusterIssuer создан (staging или prod)
+# - Домен указывает на внешний IP Ingress Controller
+# - Ingress доступен из интернета по порту 80
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-ingress
+  namespace: lesson
+  annotations:
+    # Указываем cert-manager какой Issuer использовать
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Опционально: перенаправление HTTP → HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - my-app.example.com
+      # В этот секрет cert-manager сохранит сертификат
+      secretName: my-app-tls
+  rules:
+    - host: my-app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-service
+                port:
+                  number: 80

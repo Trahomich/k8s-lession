@@ -1,0 +1,30 @@
+# Явный ресурс Certificate (опциональный способ)
+#
+# Вместо аннотации на Ingress можно создать Certificate вручную.
+# cert-manager выпустит сертификат и положит в указанный secret.
+# Затем secret используется в Ingress.spec.tls.
+#
+# Когда использовать:
+# - Нужен wildcard-сертификат (только через DNS-01)
+# - Один сертификат на несколько Ingress
+# - Нужен тонкий контроль над параметрами
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: my-app-cert
+  namespace: lesson
+spec:
+  # DNS-имена в сертификате
+  dnsNames:
+    - my-app.example.com
+    - www.my-app.example.com
+  # Какой Issuer использовать
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  # Секрет куда сохранить сертификат + ключ
+  secretName: my-app-tls
+  # Срок действия (по умолчанию 90d для Let's Encrypt)
+  duration: 2160h
+  # Обновлять за 360ч (15 дней) до истечения
+  renewBefore: 360h
